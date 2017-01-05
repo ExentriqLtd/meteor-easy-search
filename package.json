@@ -1,6 +1,6 @@
 {
   "name": "easy-search",
-  "version": "1.0.0",
+  "version": "1.0.0_1",
   "description": "Easy Search [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/) [![Build Status](https://travis-ci.org/matteodem/meteor-easy-search.svg?branch=master)](https://travis-ci.org/matteodem/meteor-easy-search) =====================",
   "main": "index.js",
   "dependencies": {

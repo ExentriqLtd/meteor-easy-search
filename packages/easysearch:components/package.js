@@ -31,6 +31,10 @@ Package.onUse(function(api) {
     'lib/load-more/load-more.html', 'lib/load-more/load-more.js', 'lib/pagination/pagination.html', 'lib/pagination/pagination.js'
   ], 'client');
 
+  api.addFiles([
+    'lib/infinite-scroll/infinite-scroll.html', 'lib/infinite-scroll/infinite-scroll.js'
+  ], 'client');
+
   api.export('EasySearch');
 
   api.mainModule('lib/main.js');

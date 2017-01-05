@@ -183,11 +183,11 @@ class SearchCollection {
 
       this.added(collectionName, 'searchCount' + definitionString, { count: count });
 
-      const intervalID = Meteor.setInterval(() => this.changed(
+      const intervalID = Meteor.defer(() => this.changed(
         collectionName,
         'searchCount' + definitionString,
         { count: cursor.mongoCursor.count() }
-      ), 500);
+      ));
 
       this.onStop(function () {
         Meteor.clearInterval(intervalID);

@@ -18,6 +18,7 @@ import {
   IfSearchingComponent,
   InputComponent,
   LoadMoreComponent,
+  InfiniteScrollComponent,
   PaginationComponent,
 } from 'meteor/easysearch:components'
 
@@ -40,5 +41,6 @@ export {
   IfSearchingComponent,
   InputComponent,
   LoadMoreComponent,
+  InfiniteScrollComponent,
   PaginationComponent,
 }

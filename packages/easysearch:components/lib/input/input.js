@@ -22,8 +22,11 @@ EasySearch.InputComponent = class InputComponent extends BaseComponent {
         this.eachIndex((index, name) => {
           index.getComponentDict(name).set('currentPage', 1);
         });
-
-        this.search(searchString);
+        if (searchString.length >= this.options.minLength) {
+          this.search(searchString);
+        } else {
+          this.search('');
+        }
       }
 
     }, this.options.timeout);
@@ -74,7 +77,8 @@ EasySearch.InputComponent = class InputComponent extends BaseComponent {
    */
   get defaultOptions() {
     return {
-      timeout: 50
+      timeout: 50,
+      minLength: 0
     };
   }
 };
