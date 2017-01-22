@@ -99,6 +99,7 @@ EasySearch._getComponentMethods = function (dict, index) {
         options = dict.get('searchOptions') || {};
 
       options.limit = currentCount + count;
+      dict.set('stopPublication', false);
       dict.set('searchOptions', options);
     },
     /**
@@ -122,7 +123,7 @@ EasySearch._getComponentMethods = function (dict, index) {
      */
     addProps(...args) {
       let options = dict.get('searchOptions') || {};
-
+      let oldOptions = _.clone(options);
       options.props = options.props || {};
 
       if (_.isObject(args[0])) {
@@ -130,24 +131,26 @@ EasySearch._getComponentMethods = function (dict, index) {
       } else if (_.isString(args[0])) {
         options.props[args[0]] = args[1];
       }
-
-      dict.set('searchOptions', options);
-      this.paginate(1);
+      if (!_.isEqual(oldOptions, options)) {
+        dict.set('searchOptions', options);
+        this.paginate(1);
+      }
     },
     /**
      * Remove custom properties for search.
      */
     removeProps(...args) {
       let options = dict.get('searchOptions') || {};
-
+      let oldOptions = _.clone(options);
       if (!_.isEmpty(args)) {
         options.props = _.omit(options.props, args) || {};
       } else {
         options.props = {};
       }
-
-      dict.set('searchOptions', options);
-      this.paginate(1);
+      if (!_.isEqual(oldOptions, options)) {
+        dict.set('searchOptions', options);
+        this.paginate(1);
+      }
     }
   };
 };

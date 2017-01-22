@@ -91,7 +91,6 @@ class MongoDBEngine extends ReactiveEngine {
     check(options, Object);
     check(selector, Object);
     check(findOptions, Object);
-
     return new Cursor(
       collection.find(selector, findOptions),
       collection.find(selector).count()

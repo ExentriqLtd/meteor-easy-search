@@ -161,7 +161,7 @@ class SearchCollection {
     Meteor.publish(collectionName, function (searchDefinition, options) {
       check(searchDefinition, Match.OneOf(String, Object));
       check(options, Object);
-
+      console.log(searchDefinition, options);
       let definitionString = JSON.stringify(searchDefinition),
         optionsString = JSON.stringify(options.props);
 
@@ -238,8 +238,8 @@ class SearchCollection {
 
           this.changed(collectionName, collectionScope.generateId(doc), doc);
         },
-        removedAt: (doc, atIndex) => {
-          doc = collectionScope.engine.config.beforePublish('removedAt', doc, atIndex);
+        removed: (doc) => {
+          doc = collectionScope.engine.config.beforePublish('removedAt', doc);
           doc = collectionScope.addCustomFields(doc, { searchDefinition: definitionString, searchOptions: optionsString });
           this.removed(collectionName, collectionScope.generateId(doc));
         }
