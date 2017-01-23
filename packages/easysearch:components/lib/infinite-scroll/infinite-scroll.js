@@ -7,14 +7,25 @@ EasySearch.InfiniteScrollComponent = class InfiniteScrollComponent extends Singl
 
   onRendered() {
     super.onRendered();
-    console.log('onRendered');
     this.f = this.onScroll.bind(this);
     document.addEventListener('scroll', this.f, true);
+    if (this.options.scrollContainer) {
+      this.computation = Tracker.autorun(() => {
+        this.index.getComponentMethods(this.name).hasMoreDocuments();
+        Tracker.afterFlush(() => {
+          this.onScroll();
+        });
+      })
+    }
   }
 
   onDestroyed() {
     super.onDestroyed();
     document.removeEventListener('scroll', this.f, true);
+    if (this.computation) {
+      this.computation.stop();
+      this.computation = null;
+    }
   }
 
   isElementVisible(el){
@@ -30,8 +41,9 @@ EasySearch.InfiniteScrollComponent = class InfiniteScrollComponent extends Singl
   };
 
   onScroll(evt) {
-    let pos = this.$('.loading').position();
-    if (this.moreDocuments() && pos.top + this.options.offset <= $(evt.currentTarget).height()){
+    var target = (evt && evt.currentTarget) || this.options.scrollContainer ;
+    let pos = $(target).find('.loading-easy-search').position();
+    if (this.moreDocuments() && pos.top - this.options.offset <= $(target).height()){
       this.loadMore();
     }
   }
@@ -80,7 +92,7 @@ EasySearch.InfiniteScrollComponent = class InfiniteScrollComponent extends Singl
    */
   events() {
     return [{
-      'click .loading' : function (evt) {
+      'click .loading-easy-search' : function (evt) {
         evt.preventDefault();
         evt.stopPropagation();
         this.loadMore();
@@ -96,8 +108,9 @@ EasySearch.InfiniteScrollComponent = class InfiniteScrollComponent extends Singl
   get defaultOptions() {
     return {
       content: 'Load more',
+      scrollContainer: null,
       offset: 100,
-      count: 10
+      count: 5
     };
   }
 };
