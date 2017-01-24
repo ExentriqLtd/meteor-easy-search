@@ -82,6 +82,7 @@ EasySearch.InfiniteScrollComponent = class InfiniteScrollComponent extends Singl
    * @returns {Boolean}
    */
   moreDocuments() {
+    console.log('has more', this.index.getComponentMethods(this.name).hasMoreDocuments());
     return this.index.getComponentMethods(this.name).hasMoreDocuments();
   }
 

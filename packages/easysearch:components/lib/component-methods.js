@@ -12,6 +12,7 @@ EasySearch._getComponentMethods = function (dict, index) {
 
       dict.set('searchDefinition', searchDefinition);
       dict.set('stopPublication', true);
+      console.log('search', searchDefinition)
     },
     /**
      * Return the EasySearch.Cursor for the current search.
@@ -123,7 +124,7 @@ EasySearch._getComponentMethods = function (dict, index) {
      */
     addProps(...args) {
       let options = dict.get('searchOptions') || {};
-      let oldOptions = _.clone(options);
+      let oldOptions = JSON.parse(JSON.stringify(options));
       options.props = options.props || {};
 
       if (_.isObject(args[0])) {
@@ -141,7 +142,7 @@ EasySearch._getComponentMethods = function (dict, index) {
      */
     removeProps(...args) {
       let options = dict.get('searchOptions') || {};
-      let oldOptions = _.clone(options);
+      let oldOptions = JSON.parse(JSON.stringify(options));
       if (!_.isEmpty(args)) {
         options.props = _.omit(options.props, args) || {};
       } else {
