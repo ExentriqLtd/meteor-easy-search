@@ -24,6 +24,7 @@ Package.onUse(function(api) {
 
   // Engines
   api.addFiles([
+    'lib/engines/external-index.js',
     'lib/engines/mongo-db.js',
     'lib/engines/minimongo.js',
     'lib/engines/mongo-text-index.js'

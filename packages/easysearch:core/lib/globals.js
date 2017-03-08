@@ -3,6 +3,7 @@ import {
   Engine,
   ReactiveEngine,
   Cursor,
+  ExternalEngine,
   MongoDBEngine,
   MinimongoEngine,
   MongoTextIndexEngine
@@ -17,5 +18,6 @@ EasySearch = {
   // Engines
   MongoDB: MongoDBEngine,
   Minimongo: MinimongoEngine,
+  External: ExternalEngine,
   MongoTextIndex: MongoTextIndexEngine
 };
