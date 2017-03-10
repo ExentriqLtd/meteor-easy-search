@@ -104,6 +104,7 @@ class ExternalEngine extends ReactiveEngine {
     check(options, Object);
     check(selector, Object);
     check(findOptions, Object);
+    selector.userId = options.search.userId;
     this.callConfigMethod('externalFetch', searchString, options, this.col);
     return new Cursor(
       this.col.find(selector, findOptions),
