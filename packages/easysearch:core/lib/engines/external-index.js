@@ -53,8 +53,18 @@ class ExternalEngine extends ReactiveEngine {
 
         return {selector: selector, searchString: keyword};
       },
-      externalFetch(searchString, options, collection) {
+      externalFetch(searchString, selector, fields, options, collection) {
+        /*
+            ExGuardianApi.call('methodName', [arguments])
+            methodName = elasticSearch.customSearch
+            [keyword, fields, filter, skip, limit]
 
+            filter: {javaClass: 'java.util.HashMap', map: {
+                'details.userId': this.userId,
+            }}
+        */
+        const args = [searchString, fields, selector, 0, 100]; //we need infinity limit
+        ExGuardianApi.call('elasticSearch.customSearch', args);
       },
       selectorPerField(field, searchString) {
         const selector = {};
@@ -104,9 +114,9 @@ class ExternalEngine extends ReactiveEngine {
     check(options, Object);
     check(selector, Object);
     check(findOptions, Object);
-    this.callConfigMethod('externalFetch', searchString, options, this.col);
+    this.callConfigMethod('externalFetch', selector, searchString, findOptions.fields, options, this.col);
     return new Cursor(
-      this.col.find(selector, findOptions),
+      this.col.find(selector, findOptions), //Mongo.Collection()
       this.col.find(selector).count()
     );
   }

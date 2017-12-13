@@ -12,6 +12,7 @@ Package.onUse(function(api) {
   // Dependencies
   api.use(['check', 'ecmascript', 'mongo', 'underscore']);
   api.use(['erasaur:meteor-lodash@4.0.0'], { weak: true });
+  api.use(['exentriq:guardian-connector'], { weak: true });
 
   // Core packages
   api.addFiles([
