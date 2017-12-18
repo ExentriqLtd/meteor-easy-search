@@ -1,5 +1,6 @@
 import Cursor from '../core/cursor';
 import ReactiveEngine from '../core/reactive-engine';
+import ExGuardianApi from 'meteor/exentriq:guardian-connector';
 
 /**
  * The MongoDBEngine lets you search the index on the server side with MongoDB. Subscriptions and publications
@@ -34,45 +35,13 @@ class ExternalEngine extends ReactiveEngine {
    */
   static defaultExternalConfiguration(engineScope) {
     return {
-      aggregation: '$or',
-      selector(searchObject, options, aggregation) {
-        const selector = {};
-
-        selector[aggregation] = [];
+      selector(searchObject, options) {
+        const selector = null;
         let keyword = null;
         _.each(searchObject, (searchString, field) => {
-          keyword = searchString;
-          const fieldSelector = engineScope.callConfigMethod(
-            'selectorPerField', field, searchString, options
-          );
-
-          if (fieldSelector) {
-            selector[aggregation].push(fieldSelector);
-          }
+            keyword = searchString;
         });
-
         return {selector: selector, searchString: keyword};
-      },
-      externalFetch(searchString, selector, fields, options, collection) {
-        /*
-            ExGuardianApi.call('methodName', [arguments])
-            methodName = elasticSearch.customSearch
-            [keyword, fields, filter, skip, limit]
-
-            filter: {javaClass: 'java.util.HashMap', map: {
-                'details.userId': this.userId,
-            }}
-        */
-        const args = [searchString, fields, selector, 0, 100]; //we need infinity limit
-        ExGuardianApi.call('elasticSearch.customSearch', args);
-      },
-      selectorPerField(field, searchString) {
-        const selector = {};
-
-        searchString = searchString.replace(/(\W{1})/g, '\\$1');
-        selector[field] = { '$regex' : `.*${searchString}.*`, '$options' : 'i'};
-
-        return selector;
       },
       sort(searchObject, options) {
         return options.index.fields;
@@ -96,29 +65,71 @@ class ExternalEngine extends ReactiveEngine {
   }
 
   /**
+   * Return array with fetched data
+   *
+   * @param {Object} selector Filter for api
+   * @param {String} searchString Search definition
+   * @param {Object} findOptions          Search and index options
+   */
+  externalFetch(selector, searchString, findOptions) {
+  /*
+      filter: {javaClass: 'java.util.HashMap', map: {
+          'details.userId': this.userId,
+      }}
+  */
+    const args = [searchString, findOptions.fields, selector, findOptions.skip, findOptions.limit]; //we need infinity limit selector
+    return Promise.await(ExGuardianApi.call('elasticSearch.customSearch', args));
+  }
+
+
+  /**
+   * Return ready collection.
+   *
+   * @param {Array} data Array with fetched data
+   */
+  prepareData(data) {
+    console.log('data', data);
+    const newCollection = new Mongo.Collection(null);
+    /*myCollection.insert({
+       _id: 'CeKLtPSQpyG6ikqto',
+      //createdAt: Thu May 19 2016 14:12:44 GMT+0700 (+07),
+      services: { password: { bcrypt: '$2a$10$FFCDpwCaeIF1BTwIO/BFIObxEekezOCx4mFCvmEbxBXG/vR37O6H2' } },
+      username: 'a.bassi@doxer.it',
+      emails: [ { address: 'a.bassi@doxer.it', verified: false } ],
+      profile: {},
+      _sort: { username: 'a.bassi@doxer.it' }
+    });*/
+    data.forEach(function(item) {
+      newCollection.insert(item.map);
+    });
+    return newCollection;
+  }
+
+  /**
    * Return the reactive search cursor.
    *
    * @param {String} searchDefinition Search definition
    * @param {Object} options          Search and index options
    */
   getSearchCursor(searchDefinition, options) {
+    console.log('getSearchCursor');
     const selObj = this.callConfigMethod(
         'selector',
         searchDefinition,
-        options,
-      this.config.aggregation),
+        options),
       findOptions = this.getFindOptions(searchDefinition, options);
     const selector = selObj.selector;
     const searchString = selObj.searchString;
     check(searchString, String);
     check(options, Object);
-    check(selector, Object);
+    //check(selector, Object);
     check(findOptions, Object);
-    this.callConfigMethod('externalFetch', selector, searchString, findOptions.fields, options, this.col);
+    const fetchedData = this.externalFetch(selector, searchString, findOptions);
+    const collection = this.prepareData(fetchedData);
     return new Cursor(
-      this.col.find(selector, findOptions), //Mongo.Collection()
-      this.col.find(selector).count()
-    );
+      collection.find(),
+      collection.find().count()
+    ); 
   }
 
 }
