@@ -60,7 +60,7 @@ class ExternalEngine extends ReactiveEngine {
       sort: this.callConfigMethod('sort', searchDefinition, options),
       limit: options.search.limit,
       skip: options.search.skip,
-      fields: this.callConfigMethod('fields', searchDefinition, options)
+      fields: options.index.fields
     };
   }
 
@@ -77,7 +77,9 @@ class ExternalEngine extends ReactiveEngine {
           'details.userId': this.userId,
       }}
   */
+    console.log('findOptions', findOptions);
     const args = [searchString, findOptions.fields, selector, findOptions.skip, findOptions.limit]; //we need infinity limit selector
+    console.log('args', args);
     return Promise.await(ExGuardianApi.call('elasticSearch.customSearch', args));
   }
 
@@ -89,20 +91,12 @@ class ExternalEngine extends ReactiveEngine {
    */
   prepareData(data) {
     console.log('data', data);
-    const newCollection = new Mongo.Collection(null);
-    /*myCollection.insert({
-       _id: 'CeKLtPSQpyG6ikqto',
-      //createdAt: Thu May 19 2016 14:12:44 GMT+0700 (+07),
-      services: { password: { bcrypt: '$2a$10$FFCDpwCaeIF1BTwIO/BFIObxEekezOCx4mFCvmEbxBXG/vR37O6H2' } },
-      username: 'a.bassi@doxer.it',
-      emails: [ { address: 'a.bassi@doxer.it', verified: false } ],
-      profile: {},
-      _sort: { username: 'a.bassi@doxer.it' }
-    });*/
+    const objIds = [];
     data.forEach(function(item) {
-      newCollection.insert(item.map);
+      objIds.push(item.map.userId);
     });
-    return newCollection;
+    const selector = {"_id": { "$in": objIds }};
+    return selector;
   }
 
   /**
@@ -112,7 +106,6 @@ class ExternalEngine extends ReactiveEngine {
    * @param {Object} options          Search and index options
    */
   getSearchCursor(searchDefinition, options) {
-    console.log('getSearchCursor');
     const selObj = this.callConfigMethod(
         'selector',
         searchDefinition,
@@ -125,10 +118,12 @@ class ExternalEngine extends ReactiveEngine {
     //check(selector, Object);
     check(findOptions, Object);
     const fetchedData = this.externalFetch(selector, searchString, findOptions);
-    const collection = this.prepareData(fetchedData);
+    const preparedSelector = this.prepareData(fetchedData);
+    const collection = options.index.collection;
+    console.log('preparedSelector', preparedSelector);
     return new Cursor(
-      collection.find(),
-      collection.find().count()
+      collection.find(preparedSelector),
+      collection.find(preparedSelector).count()
     ); 
   }
 
