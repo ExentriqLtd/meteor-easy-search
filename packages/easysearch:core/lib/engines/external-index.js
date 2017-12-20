@@ -93,7 +93,7 @@ class ExternalEngine extends ReactiveEngine {
     console.log('data', data);
     const objIds = [];
     data.forEach(function(item) {
-      objIds.push(item.map.userId);
+      objIds.push(item.map._id);
     });
     const selector = {"_id": { "$in": objIds }};
     return selector;
