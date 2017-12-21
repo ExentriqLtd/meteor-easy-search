@@ -36,7 +36,7 @@ class ExternalEngine extends ReactiveEngine {
   static defaultExternalConfiguration(engineScope) {
     return {
       selector(searchObject, options) {
-        const selector = null;
+        const selector = {};
         let keyword = null;
         _.each(searchObject, (searchString, field) => {
             keyword = searchString;
@@ -78,9 +78,9 @@ class ExternalEngine extends ReactiveEngine {
       }}
   */
     console.log('findOptions', findOptions);
-    const args = [searchString, findOptions.fields, selector, findOptions.skip, findOptions.limit]; //we need infinity limit selector
+    const args = [searchString, findOptions.fields, JSON.stringify(selector), findOptions.skip, findOptions.limit];
     console.log('args', args);
-    return Promise.await(ExGuardianApi.call('elasticSearch.customSearch', args));
+    return Promise.await(ExGuardianApi.call('elasticSearch.mongoCustomSearch', args));
   }
 
 
