@@ -117,8 +117,12 @@ class ExternalEngine extends ReactiveEngine {
     check(options, Object);
     //check(selector, Object);
     check(findOptions, Object);
+    const time1 = new Date().getTime();
     const fetchedData = this.externalFetch(selector, searchString, findOptions);
+    const time2 = new Date().getTime();
     const preparedSelector = this.prepareData(fetchedData);
+    const time3 = new Date().getTime();
+    console.log('Search Took:', time3-time1, time3 - time2);
     const collection = options.index.collection;
     console.log('preparedSelector', preparedSelector);
     return new Cursor(
