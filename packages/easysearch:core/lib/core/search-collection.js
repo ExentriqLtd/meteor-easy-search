@@ -159,6 +159,9 @@ class SearchCollection {
       collectionName = this.name;
 
     Meteor.publish(collectionName, function (searchDefinition, options) {
+      if (collectionScope._indexConfiguration.unblocked){
+        this.unblock();
+      }
       check(searchDefinition, Match.OneOf(String, Object));
       check(options, Object);
       console.log(searchDefinition, options);

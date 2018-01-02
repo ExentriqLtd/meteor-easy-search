@@ -1,8 +1,10 @@
 import Cursor from '../core/cursor';
 import ReactiveEngine from '../core/reactive-engine';
 import ExGuardianApi from 'meteor/exentriq:guardian-connector';
-import Future from 'fibers/future';
-
+let Future;
+if (Meteor.isServer) {
+  Future = require('fibers/future');
+}
 
 let searchProm = null;
 
@@ -14,10 +16,8 @@ let searchProm = null;
  */
 class ExternalEngine extends ReactiveEngine {
 
-
-
   onIndexCreate(indexConfig) {
-    super.onIndexCreate(indexConfig);
+    super.onIndexCreate({...indexConfig, unblocked: true});
     if (Meteor.isServer) {
       this.col = new Mongo.Collection(null)
     }
