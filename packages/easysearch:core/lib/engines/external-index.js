@@ -1,6 +1,12 @@
 import Cursor from '../core/cursor';
 import ReactiveEngine from '../core/reactive-engine';
 import ExGuardianApi from 'meteor/exentriq:guardian-connector';
+import Future from 'fibers/future';
+
+
+let searchProm = null;
+
+let prevF = null;
 
 /**
  * The MongoDBEngine lets you search the index on the server side with MongoDB. Subscriptions and publications
@@ -9,6 +15,8 @@ import ExGuardianApi from 'meteor/exentriq:guardian-connector';
  * @type {MongoDBEngine}
  */
 class ExternalEngine extends ReactiveEngine {
+
+
 
   onIndexCreate(indexConfig) {
     super.onIndexCreate(indexConfig);
@@ -77,10 +85,44 @@ class ExternalEngine extends ReactiveEngine {
           'details.userId': this.userId,
       }}
   */
-    console.log('findOptions', findOptions);
+
+    //console.log('TIMEOUT SETTED');
+    //console.log('findOptions', findOptions);
+    const f = new Future();
     const args = [searchString, findOptions.fields, JSON.stringify(selector), findOptions.skip, findOptions.limit];
-    console.log('args', args);
-    return Promise.await(ExGuardianApi.call('elasticSearch.mongoCustomSearch', args));
+    //console.log('args', args);
+    if(searchProm){
+      searchProm.cancel();
+      console.log('inside CANCEL');
+    }
+    if(prevF){
+      prevF.return('prikol');
+    }
+    const prom = ExGuardianApi.call('elasticSearch.mongoCustomSearch', args);
+    
+    //const result = Promise.await(prom);
+    prom.then(function(result) {
+      console.log('prom EXECUTED');
+      f.return(result);
+    });
+
+    prom.catch(function(error) {
+      console.log('inside CATCH');
+      f.throw(error);
+    });
+
+    prom.finally(function() {
+       if(prom.isCancelled()) {
+            console.log('prom CANCELLED');
+           f.return([]);
+       }
+    });
+
+    searchProm = prom;
+    prevF = f;
+    
+    return f.wait();
+    
   }
 
 
@@ -90,11 +132,13 @@ class ExternalEngine extends ReactiveEngine {
    * @param {Array} data Array with fetched data
    */
   prepareData(data) {
-    console.log('data', data);
+    //console.log('data', data);
     const objIds = [];
-    data.forEach(function(item) {
-      objIds.push(item.map._id);
-    });
+    if(data.length > 0){
+      data.forEach(function(item) {
+        objIds.push(item.map._id);
+      });
+    }
     const selector = {"_id": { "$in": objIds }};
     return selector;
   }
@@ -118,6 +162,7 @@ class ExternalEngine extends ReactiveEngine {
     //check(selector, Object);
     check(findOptions, Object);
     const fetchedData = this.externalFetch(selector, searchString, findOptions);
+    console.log('fetchedData RESULT', fetchedData);
     const preparedSelector = this.prepareData(fetchedData);
     const collection = options.index.collection;
     console.log('preparedSelector', preparedSelector);
@@ -125,6 +170,16 @@ class ExternalEngine extends ReactiveEngine {
       collection.find(preparedSelector),
       collection.find(preparedSelector).count()
     ); 
+
+    //const fetchedData = this.externalFetch(selector, searchString, findOptions);
+    //console.log('fetchedData', fetchedData);
+    //const preparedSelector = this.prepareData(fetchedData);
+    //const collection = options.index.collection;
+    //console.log('preparedSelector', preparedSelector);
+    //return new Cursor(
+    //  collection.find(preparedSelector),
+    //  collection.find(preparedSelector).count()
+    //); 
   }
 
 }
