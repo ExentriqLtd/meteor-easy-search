@@ -6,8 +6,6 @@ import Future from 'fibers/future';
 
 let searchProm = null;
 
-let prevF = null;
-
 /**
  * The MongoDBEngine lets you search the index on the server side with MongoDB. Subscriptions and publications
  * are handled within the Engine.
@@ -95,9 +93,7 @@ class ExternalEngine extends ReactiveEngine {
       searchProm.cancel();
       console.log('inside CANCEL');
     }
-    if(prevF){
-      prevF.return('prikol');
-    }
+
     const prom = ExGuardianApi.call('elasticSearch.mongoCustomSearch', args);
     
     //const result = Promise.await(prom);
@@ -119,7 +115,6 @@ class ExternalEngine extends ReactiveEngine {
     });
 
     searchProm = prom;
-    prevF = f;
     
     return f.wait();
     
