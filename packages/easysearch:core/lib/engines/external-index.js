@@ -95,6 +95,8 @@ class ExternalEngine extends ReactiveEngine {
     }
 
     const prom = ExGuardianApi.call('elasticSearch.mongoCustomSearch', args);
+    searchProm = prom;
+    //Meteor._sleepForMs(5000);
     
     //const result = Promise.await(prom);
     prom.then(function(result) {
@@ -113,8 +115,6 @@ class ExternalEngine extends ReactiveEngine {
            f.return([]);
        }
     });
-
-    searchProm = prom;
     
     return f.wait();
     
