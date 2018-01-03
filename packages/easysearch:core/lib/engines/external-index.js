@@ -17,7 +17,8 @@ let searchProm = null;
 class ExternalEngine extends ReactiveEngine {
 
   onIndexCreate(indexConfig) {
-    super.onIndexCreate({...indexConfig, unblocked: true});
+    indexConfig.unblocked = true;
+    super.onIndexCreate(indexConfig);
     if (Meteor.isServer) {
       this.col = new Mongo.Collection(null)
     }
