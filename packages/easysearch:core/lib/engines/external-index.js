@@ -65,9 +65,9 @@ class ExternalEngine extends ReactiveEngine {
   getFindOptions(searchDefinition, options) {
     return {
       sort: this.callConfigMethod('sort', searchDefinition, options),
-      limit: options.search.limit,
-      skip: options.search.skip,
-      fields: options.index.fields
+      //limit: options.search.limit,
+      //skip: options.search.skip,
+      //fields: options.index.fields
     };
   }
 
@@ -79,12 +79,6 @@ class ExternalEngine extends ReactiveEngine {
    * @param {Object} findOptions          Search and index options
    */
   externalFetch(selector, searchString, findOptions) {
-  /*
-      filter: {javaClass: 'java.util.HashMap', map: {
-          'details.userId': this.userId,
-      }}
-  */
-
     //console.log('TIMEOUT SETTED');
     //console.log('findOptions', findOptions);
     const f = new Future();
@@ -92,7 +86,7 @@ class ExternalEngine extends ReactiveEngine {
     //console.log('args', args);
     if(searchProm){
       searchProm.cancel();
-      console.log('inside CANCEL');
+
     }
 
     const prom = ExGuardianApi.call('elasticSearch.mongoCustomSearch', args);
@@ -101,18 +95,15 @@ class ExternalEngine extends ReactiveEngine {
     
     //const result = Promise.await(prom);
     prom.then(function(result) {
-      console.log('prom EXECUTED');
       f.return(result);
     });
 
     prom.catch(function(error) {
-      console.log('inside CATCH');
       f.throw(error);
     });
 
     prom.finally(function() {
        if(prom.isCancelled()) {
-            console.log('prom CANCELLED');
            f.return([]);
        }
     });
@@ -166,19 +157,9 @@ class ExternalEngine extends ReactiveEngine {
     const collection = options.index.collection;
     console.log('preparedSelector', preparedSelector);
     return new Cursor(
-      collection.find(preparedSelector),
+      collection.find(preparedSelector, findOptions),
       collection.find(preparedSelector).count()
     ); 
-
-    //const fetchedData = this.externalFetch(selector, searchString, findOptions);
-    //console.log('fetchedData', fetchedData);
-    //const preparedSelector = this.prepareData(fetchedData);
-    //const collection = options.index.collection;
-    //console.log('preparedSelector', preparedSelector);
-    //return new Cursor(
-    //  collection.find(preparedSelector),
-    //  collection.find(preparedSelector).count()
-    //); 
   }
 
 }
