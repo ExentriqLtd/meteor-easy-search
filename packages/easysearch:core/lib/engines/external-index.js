@@ -65,9 +65,9 @@ class ExternalEngine extends ReactiveEngine {
   getFindOptions(searchDefinition, options) {
     return {
       sort: this.callConfigMethod('sort', searchDefinition, options),
-      limit: options.search.limit,
-      skip: options.search.skip,
-      fields: options.index.fields
+      //limit: options.search.limit,
+      //skip: options.search.skip,
+      //fields: options.index.fields
     };
   }
 
@@ -84,25 +84,22 @@ class ExternalEngine extends ReactiveEngine {
     const args = [searchString, findOptions.fields, JSON.stringify(selector), findOptions.skip, findOptions.limit];
     if(searchProm){
       searchProm.cancel();
-      console.log('inside CANCEL');
+
     }
 
     const prom = ExGuardianApi.call('elasticSearch.mongoCustomSearch', args);
     searchProm = prom;
 
     prom.then(function(result) {
-      console.log('prom EXECUTED');
       f.return(result);
     });
 
     prom.catch(function(error) {
-      console.log('inside CATCH');
       f.throw(error);
     });
 
     prom.finally(function() {
        if(prom.isCancelled()) {
-            console.log('prom CANCELLED');
            f.return([]);
        }
     });
@@ -155,7 +152,7 @@ class ExternalEngine extends ReactiveEngine {
     const collection = options.index.collection;
     console.log('preparedSelector', preparedSelector);
     return new Cursor(
-      collection.find(preparedSelector),
+      collection.find(preparedSelector, findOptions),
       collection.find(preparedSelector).count()
     ); 
   }
