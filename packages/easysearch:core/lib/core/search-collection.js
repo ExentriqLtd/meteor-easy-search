@@ -193,14 +193,12 @@ class SearchCollection {
         )
       , 250);
 
-      const computation = Tracker.autorun(() => {
+      let computation;
+      Tracker.autorun((c) => {
+        computation = c;
         count = cursor.mongoCursor.count();
+        console.log('count', count);
         updateCount();
-      })
-
-      this.onStop(function () {
-        computation.stop()
-        resultsHandle && resultsHandle.stop();
       });
 
       let resultsHandle = cursor.mongoCursor.observe({
@@ -251,6 +249,11 @@ class SearchCollection {
           doc = collectionScope.addCustomFields(doc, { searchDefinition: definitionString, searchOptions: optionsString });
           this.removed(collectionName, collectionScope.generateId(doc));
         }
+      });
+      
+      this.onStop(function () {
+        computation && computation.stop()
+        resultsHandle && resultsHandle.stop();
       });
 
       this.ready();

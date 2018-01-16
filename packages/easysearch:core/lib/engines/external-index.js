@@ -1,6 +1,7 @@
 import Cursor from '../core/cursor';
 import ReactiveEngine from '../core/reactive-engine';
 import ExGuardianApi from 'meteor/exentriq:guardian-connector';
+import { arch } from 'os';
 let Future;
 if (Meteor.isServer) {
   Future = require('fibers/future');
@@ -64,10 +65,15 @@ class ExternalEngine extends ReactiveEngine {
    */
   getFindOptions(searchDefinition, options) {
     return {
+    };
+  }
+
+  getExternalFindOptions(searchDefinition, options) {
+    return {
       sort: this.callConfigMethod('sort', searchDefinition, options),
-      //limit: options.search.limit,
-      //skip: options.search.skip,
-      //fields: options.index.fields
+      limit: options.search.limit,
+      skip: options.search.skip,
+      fields: options.index.fields
     };
   }
 
@@ -81,12 +87,11 @@ class ExternalEngine extends ReactiveEngine {
   externalFetch(selector, searchString, findOptions) {
   
     const f = new Future();
-    const args = [searchString, findOptions.fields, JSON.stringify(selector), findOptions.skip, findOptions.limit];
+    const args = [searchString, findOptions.fields, JSON.stringify(selector), findOptions.skip || 0, findOptions.limit || 10];
+    console.log(args);
     if(searchProm){
       searchProm.cancel();
-
     }
-
     const prom = ExGuardianApi.call('elasticSearch.mongoCustomSearch', args);
     searchProm = prom;
 
@@ -95,6 +100,7 @@ class ExternalEngine extends ReactiveEngine {
     });
 
     prom.catch(function(error) {
+      console.error(error);
       f.throw(error);
     });
 
@@ -121,7 +127,7 @@ class ExternalEngine extends ReactiveEngine {
         objIds.push(item.map._id);
       });
     }
-    const selector = {"_id": { "$in": objIds }};
+    const selector = {_id: { $in: objIds }};
     return selector;
   }
 
@@ -144,13 +150,12 @@ class ExternalEngine extends ReactiveEngine {
     //check(selector, Object);
     check(findOptions, Object);
     const time1 = new Date().getTime();
-    const fetchedData = this.externalFetch(selector, searchString, findOptions);
+    const fetchedData = this.externalFetch(selector, searchString, this.getExternalFindOptions(searchDefinition, options));
     const time2 = new Date().getTime();
     const preparedSelector = this.prepareData(fetchedData);
     const time3 = new Date().getTime();
     console.log('Search Took:', time3-time1, time3 - time2);
     const collection = options.index.collection;
-    console.log('preparedSelector', preparedSelector);
     return new Cursor(
       collection.find(preparedSelector, findOptions),
       collection.find(preparedSelector).count()
