@@ -182,18 +182,24 @@ class SearchCollection {
         index: collectionScope._indexConfiguration
       });
 
-      const count = cursor.count();
+      let count = cursor.count();
 
       this.added(collectionName, 'searchCount' + definitionString, { count: count });
 
-      const intervalID = Meteor.defer(() => this.changed(
-        collectionName,
-        'searchCount' + definitionString,
-        { count: cursor.mongoCursor.count() }
-      ));
+      const updateCount = _.throttle(() => this.changed(
+          collectionName,
+          'searchCount' + definitionString,
+          { count: count }
+        )
+      , 250);
+
+      const computation = Tracker.autorun(() => {
+        count = cursor.mongoCursor.count();
+        updateCount();
+      })
 
       this.onStop(function () {
-        Meteor.clearInterval(intervalID);
+        computation.stop()
         resultsHandle && resultsHandle.stop();
       });
 
@@ -206,7 +212,6 @@ class SearchCollection {
             sortPosition: atIndex,
             originalId: doc._id
           });
-
           this.added(collectionName, collectionScope.generateId(doc), doc);
         },
         changedAt: (doc, oldDoc, atIndex) => {
@@ -246,10 +251,6 @@ class SearchCollection {
           doc = collectionScope.addCustomFields(doc, { searchDefinition: definitionString, searchOptions: optionsString });
           this.removed(collectionName, collectionScope.generateId(doc));
         }
-      });
-
-      this.onStop(function () {
-        resultsHandle.stop();
       });
 
       this.ready();

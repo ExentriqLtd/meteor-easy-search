@@ -79,17 +79,9 @@ class ExternalEngine extends ReactiveEngine {
    * @param {Object} findOptions          Search and index options
    */
   externalFetch(selector, searchString, findOptions) {
-  /*
-      filter: {javaClass: 'java.util.HashMap', map: {
-          'details.userId': this.userId,
-      }}
-  */
-
-    //console.log('TIMEOUT SETTED');
-    //console.log('findOptions', findOptions);
+  
     const f = new Future();
     const args = [searchString, findOptions.fields, JSON.stringify(selector), findOptions.skip, findOptions.limit];
-    //console.log('args', args);
     if(searchProm){
       searchProm.cancel();
       console.log('inside CANCEL');
@@ -97,9 +89,7 @@ class ExternalEngine extends ReactiveEngine {
 
     const prom = ExGuardianApi.call('elasticSearch.mongoCustomSearch', args);
     searchProm = prom;
-    //Meteor._sleepForMs(5000);
-    
-    //const result = Promise.await(prom);
+
     prom.then(function(result) {
       console.log('prom EXECUTED');
       f.return(result);
@@ -128,7 +118,6 @@ class ExternalEngine extends ReactiveEngine {
    * @param {Array} data Array with fetched data
    */
   prepareData(data) {
-    //console.log('data', data);
     const objIds = [];
     if(data.length > 0){
       data.forEach(function(item) {
@@ -169,16 +158,6 @@ class ExternalEngine extends ReactiveEngine {
       collection.find(preparedSelector),
       collection.find(preparedSelector).count()
     ); 
-
-    //const fetchedData = this.externalFetch(selector, searchString, findOptions);
-    //console.log('fetchedData', fetchedData);
-    //const preparedSelector = this.prepareData(fetchedData);
-    //const collection = options.index.collection;
-    //console.log('preparedSelector', preparedSelector);
-    //return new Cursor(
-    //  collection.find(preparedSelector),
-    //  collection.find(preparedSelector).count()
-    //); 
   }
 
 }
