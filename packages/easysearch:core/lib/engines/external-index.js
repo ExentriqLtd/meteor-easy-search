@@ -9,6 +9,24 @@ if (Meteor.isServer) {
 
 let searchProm = null;
 
+const ElasticCursor = ({ total, data }) => ({ 
+  fetch: () => data,
+  mongoCursor: {
+    count: () => total,
+    observe: ({addedAt, removed}) => {
+      for (let i = 0; i < data.length; i += 1) {
+        addedAt(data[i], i, (i === data.length -1) ? null : data[i+1]._id);
+      }
+      return { 
+        stop: () => {
+        } 
+      }; 
+    },
+  },
+  count: () => total,
+  stop: () => {} 
+});
+
 /**
  * The MongoDBEngine lets you search the index on the server side with MongoDB. Subscriptions and publications
  * are handled within the Engine.
@@ -88,15 +106,15 @@ class ExternalEngine extends ReactiveEngine {
   
     const f = new Future();
     const args = [searchString, findOptions.fields, JSON.stringify(selector), findOptions.skip || 0, findOptions.limit || 10];
-    console.log(args);
     if(searchProm){
       searchProm.cancel();
     }
-    const prom = ExGuardianApi.call('elasticSearch.mongoCustomSearch', args);
+    const prom = ExGuardianApi.call('elasticSearch.mongoCustomSearchPaginated', args, true);
     searchProm = prom;
 
     prom.then(function(result) {
-      f.return(result);
+      const { total, list: { list } } = result && result.result;
+      f.return({ total, data: list });
     });
 
     prom.catch(function(error) {
@@ -106,12 +124,10 @@ class ExternalEngine extends ReactiveEngine {
 
     prom.finally(function() {
        if(prom.isCancelled()) {
-           f.return([]);
+           f.return({ total: 0, data: [] });
        }
     });
-    
     return f.wait();
-    
   }
 
 
@@ -120,7 +136,7 @@ class ExternalEngine extends ReactiveEngine {
    *
    * @param {Array} data Array with fetched data
    */
-  prepareData(data) {
+  prepareData({ data, total }, col) {
     const objIds = [];
     if(data.length > 0){
       data.forEach(function(item) {
@@ -128,7 +144,9 @@ class ExternalEngine extends ReactiveEngine {
       });
     }
     const selector = {_id: { $in: objIds }};
-    return selector;
+    const res = col.find(selector).fetch();
+    const mongoData = _.sortBy(res, el => objIds.indexOf(el._id));
+    return { total, data: mongoData };
   }
 
   /**
@@ -147,19 +165,14 @@ class ExternalEngine extends ReactiveEngine {
     const searchString = selObj.searchString;
     check(searchString, String);
     check(options, Object);
-    //check(selector, Object);
     check(findOptions, Object);
     const time1 = new Date().getTime();
     const fetchedData = this.externalFetch(selector, searchString, this.getExternalFindOptions(searchDefinition, options));
     const time2 = new Date().getTime();
-    const preparedSelector = this.prepareData(fetchedData);
+    const preparedData = this.prepareData(fetchedData, options.index.collection);
     const time3 = new Date().getTime();
     console.log('Search Took:', time3-time1, time3 - time2);
-    const collection = options.index.collection;
-    return new Cursor(
-      collection.find(preparedSelector, findOptions),
-      collection.find(preparedSelector).count()
-    ); 
+    return ElasticCursor(preparedData); 
   }
 
 }
