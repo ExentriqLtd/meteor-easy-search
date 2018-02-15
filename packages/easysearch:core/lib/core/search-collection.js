@@ -164,7 +164,6 @@ class SearchCollection {
       }
       check(searchDefinition, Match.OneOf(String, Object));
       check(options, Object);
-      console.log(searchDefinition, options);
       let definitionString = JSON.stringify(searchDefinition),
         optionsString = JSON.stringify(options.props);
 
@@ -179,6 +178,7 @@ class SearchCollection {
 
       let cursor = collectionScope.engine.search(searchDefinition, {
         search: options,
+        connectionId: this.connection.id,
         index: collectionScope._indexConfiguration
       });
 
