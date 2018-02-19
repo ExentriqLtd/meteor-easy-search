@@ -66,8 +66,12 @@ class SearchCollection {
     if (!Meteor.isClient) {
       throw new Error('find can only be used on client');
     }
-
-    let publishHandle = Meteor.subscribe(this.name, searchDefinition, options);
+    const d = new Date().getTime();
+    let publishHandle = Meteor.subscribe(this.name, searchDefinition, options, {
+      onStop() {
+        console.log('stop', new Date().getTime());
+      }
+    });
 
     let count = this._getCount(searchDefinition);
     let mongoCursor = this._getMongoCursor(searchDefinition, options);
@@ -75,7 +79,7 @@ class SearchCollection {
     if (!_.isNumber(count)) {
       return new Cursor(mongoCursor, 0, false);
     }
-
+    console.log(new Date().getTime() - d)
     return new Cursor(mongoCursor, count, true, publishHandle);
   }
 
@@ -159,9 +163,6 @@ class SearchCollection {
       collectionName = this.name;
 
     Meteor.publish(collectionName, function (searchDefinition, options) {
-      if (collectionScope._indexConfiguration.unblocked){
-        this.unblock();
-      }
       check(searchDefinition, Match.OneOf(String, Object));
       check(options, Object);
       let definitionString = JSON.stringify(searchDefinition),
@@ -197,7 +198,6 @@ class SearchCollection {
       Tracker.autorun((c) => {
         computation = c;
         count = cursor.mongoCursor.count();
-        console.log('count', count);
         updateCount();
       });
 
@@ -255,8 +255,12 @@ class SearchCollection {
         computation && computation.stop()
         resultsHandle && resultsHandle.stop();
       });
-
+      
       this.ready();
+
+      if (collectionScope._indexConfiguration.unblocked){
+        this.unblock();
+      }
     });
   }
 }

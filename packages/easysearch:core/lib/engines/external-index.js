@@ -3,6 +3,7 @@ import ReactiveEngine from "../core/reactive-engine";
 import ExGuardianApi from "meteor/exentriq:guardian-connector";
 import { arch } from "os";
 import { setTimeout } from "timers";
+import { ReactiveVar } from "meteor/reactive-var";
 let Future;
 if (Meteor.isServer) {
   Future = require("fibers/future");
@@ -73,9 +74,11 @@ const remove = (array, item) => {
 
 class ElasticCursor {
   constructor(id, selector, searchString, searchOptions, col) {
+    console.log('cursor', id);
     this.id = id;
     this.col = col;
     this.countDep = new Tracker.Dependency();
+    this.ready = new ReactiveVar(false);
     this.dataDep = new Tracker.Dependency();
     this.data = cache.get(id);
     if (!this.data) {
@@ -90,6 +93,33 @@ class ElasticCursor {
       movedTo: [],
       changedAt: []
     };
+    this.mongoCursor = {
+      count: () => {
+        const data = this.data.entries;
+        this.countDep.depend();
+        return this.data.total;
+      },
+      observe: ({ addedAt, removed, movedTo, changedAt }) => {
+        console.log('cached observer', this.data.entries.length)
+        const data = this.data.entries;
+        this.cbs.addedAt.push(addedAt);
+        this.cbs.removed.push(removed);
+        this.cbs.movedTo.push(movedTo);
+        this.cbs.changedAt.push(changedAt);
+        for (let i = 0; i < data.length; i += 1) {
+          addedAt(data[i], i, i === data.length - 1 ? null : data[i + 1]._id);
+        }
+        return {
+          stop: () => {
+            remove(this.cbs.addedAt, addedAt);
+            remove(this.cbs.movedTo, movedTo);
+            remove(this.cbs.removed, removed);
+            remove(this.cbs.changedAt, changedAt);
+          }
+        };
+      },
+      ready: () => true
+    }
   }
 
   search(selector, searchString, findOptions) {
@@ -122,13 +152,14 @@ class ElasticCursor {
 
     prom.finally(Meteor.bindEnvironment(() => {
       if (prom.isCancelled()) {
-        this.publishData({ total: 0, data: [] });
+        console.log('cancel');
       }
     }));
   }
 
   publishData(d) {
     const { total, data } = prepareData(d, this.col);
+    console.log(total, data.length);
     const currentIds = _.pluck(data, "_id");
     const earlierIds = _.pluck(this.data.entries, "_id");
     const removed = _.difference(earlierIds, currentIds);
@@ -192,12 +223,14 @@ class ElasticCursor {
         this.run('addedAt', dataByIdNew[id].d, action.at, action.at === data.length - 1 ? null : data[action.at + 1]._id );
       }
     }
+    this.ready.set(true);
   }
 
   run(type, ...params) {
     if (!this.cbs[type]) {
       return //stopped
     }
+    console.log(type);
     for (let i = 0; i < this.cbs[type].length; i += 1) {
       this.cbs[type][i](...params);
     }
@@ -206,32 +239,6 @@ class ElasticCursor {
   fetch() {
     this.dataDep.depend();
     return this.data.entries;
-  }
-
-  mongoCursor = {
-    count: () => {
-      const data = this.data.entries;
-      this.countDep.depend();
-      return this.data.total;
-    },
-    observe: ({ addedAt, removed, movedTo, changedAt }) => {
-      const data = this.data.entries;
-      this.cbs.addedAt.push(addedAt);
-      this.cbs.removed.push(removed);
-      this.cbs.movedTo.push(movedTo);
-      this.cbs.changedAt.push(changedAt);
-      for (let i = 0; i < data.length; i += 1) {
-        addedAt(data[i], i, i === data.length - 1 ? null : data[i + 1]._id);
-      }
-      return {
-        stop: () => {
-          remove(this.cbs.addedAt, addedAt);
-          remove(this.cbs.movedTo, movedTo);
-          remove(this.cbs.removed, removed);
-          remove(this.cbs.changedAt, changedAt);
-        }
-      };
-    }
   }
 
   count() {
@@ -343,6 +350,12 @@ class ExternalEngine extends ReactiveEngine {
       searchString: undefined,
       skip: undefined
     };
+    console.log(JSON.stringify(
+      {
+      ...selObj,
+      ...searchOptions,
+      connectionId: options.connectionId}));
+
     const id = murmurhash3_32_gc(JSON.stringify(allParams));
     return new ElasticCursor(
       `${options.connectionId}${id}`,

@@ -14,7 +14,7 @@ EasySearch.EachComponent = class EachComponent extends SingleIndexComponent {
       .getComponentDict(this.name)
       .get('stopPublication')
     ;
-
+    console.log('stopping', stopPublication)
     this.cursor && stopPublication && this.cursor.stop();
 
     this.cursor = this.index
