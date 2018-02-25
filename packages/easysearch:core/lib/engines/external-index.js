@@ -350,11 +350,11 @@ class ExternalEngine extends ReactiveEngine {
       searchString: undefined,
       skip: undefined
     };
-    console.log(JSON.stringify(
-      {
-      ...selObj,
-      ...searchOptions,
-      connectionId: options.connectionId}));
+    // console.log(JSON.stringify(
+    //   {
+    //   ...selObj,
+    //   ...searchOptions,
+    //   connectionId: options.connectionId}));
 
     const id = murmurhash3_32_gc(JSON.stringify(allParams));
     return new ElasticCursor(
