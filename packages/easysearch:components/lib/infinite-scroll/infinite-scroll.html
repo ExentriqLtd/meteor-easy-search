@@ -1,5 +1,6 @@
 <template name="EasySearch.InfiniteScroll">
     {{#if moreDocuments}}
         <div class="loading loading-easy-search" style="text-align: center; padding: 6px 0" {{attributes}}>{{content}}</div>
+        {{> Template.contentBlock }}
     {{/if}}
 </template>

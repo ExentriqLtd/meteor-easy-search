@@ -99,7 +99,7 @@ EasySearch._getComponentMethods = function (dict, index) {
       let currentCount = dict.get('currentCount'),
         options = dict.get('searchOptions') || {};
 
-      options.limit = currentCount + count;
+      options.limit = (options.limit || 0) + count;
       dict.set('stopPublication', false);
       dict.set('searchOptions', options);
     },
