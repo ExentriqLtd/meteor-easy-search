@@ -50,7 +50,10 @@ class Cache {
   }
 }
 
-const prepareData = ({ data, total }, col) => {
+const prepareData = ({ data, total }, col, raw) => {
+  if (raw) {
+    return { data, total };
+  }
   const objIds = [];
   if (data.length > 0) {
     data.forEach(function(item) {
@@ -73,10 +76,11 @@ const remove = (array, item) => {
 };
 
 class ElasticCursor {
-  constructor(id, selector, searchString, searchOptions, col) {
+  constructor(id, selector, searchString, searchOptions, col, raw) {
     console.log('cursor', id);
     this.id = id;
     this.col = col;
+    this.raw = raw;
     this.countDep = new Tracker.Dependency();
     this.ready = new ReactiveVar(false);
     this.dataDep = new Tracker.Dependency();
@@ -158,7 +162,7 @@ class ElasticCursor {
   }
 
   publishData(d) {
-    const { total, data } = prepareData(d, this.col);
+    const { total, data } = prepareData(d, this.col, this.raw);
     console.log(total, data.length);
     const currentIds = _.pluck(data, "_id");
     const earlierIds = _.pluck(this.data.entries, "_id");
@@ -350,11 +354,6 @@ class ExternalEngine extends ReactiveEngine {
       searchString: undefined,
       skip: undefined
     };
-    // console.log(JSON.stringify(
-    //   {
-    //   ...selObj,
-    //   ...searchOptions,
-    //   connectionId: options.connectionId}));
 
     const id = murmurhash3_32_gc(JSON.stringify(allParams));
     return new ElasticCursor(
@@ -362,7 +361,8 @@ class ExternalEngine extends ReactiveEngine {
       selector,
       searchString,
       searchOptions,
-      options.index.collection
+      options.index.collection,
+      options.index.raw,
     );
   }
 }
