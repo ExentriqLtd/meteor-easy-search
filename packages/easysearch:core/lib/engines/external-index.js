@@ -52,7 +52,10 @@ class Cache {
 
 const prepareData = ({ data, total }, col, raw) => {
   if (raw) {
-    return { data, total };
+    return { 
+      data: _.map(data, (e) => e.map || e),
+      total 
+    };
   }
   const objIds = [];
   if (data.length > 0) {
