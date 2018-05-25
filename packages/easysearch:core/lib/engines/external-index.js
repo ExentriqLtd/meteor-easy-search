@@ -148,7 +148,6 @@ class ElasticCursor {
 
     prom.then(Meteor.bindEnvironment(result => {
       const { total, list: { list } } = result && result.result;
-      Meteor._sleepForMs(1000);
       this.publishData({ total, data: list });
     }));
 
