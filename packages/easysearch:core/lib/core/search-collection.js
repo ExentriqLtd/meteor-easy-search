@@ -67,6 +67,7 @@ class SearchCollection {
       throw new Error('find can only be used on client');
     }
     const d = new Date().getTime();
+    const ready = new ReactiveVar(false);
     let publishHandle = Meteor.subscribe(this.name, searchDefinition, options, {
       onStop() {
         console.log('stop', new Date().getTime());
@@ -79,8 +80,12 @@ class SearchCollection {
     if (!_.isNumber(count)) {
       return new Cursor(mongoCursor, 0, false);
     }
+    Tracker.autorun(() => {
+      let isReady = this._collection.findOne('ready' + JSON.stringify(searchDefinition));
+      ready.set(isReady && isReady.ready);
+    })
     console.log(new Date().getTime() - d)
-    return new Cursor(mongoCursor, count, true, publishHandle);
+    return new Cursor(mongoCursor, count, ready, publishHandle);
   }
 
   /**
@@ -183,9 +188,11 @@ class SearchCollection {
         index: collectionScope._indexConfiguration
       });
 
-      let count = cursor.count();
+      let count = cursor.count() || 0;
 
       this.added(collectionName, 'searchCount' + definitionString, { count: count });
+      console.log('sending add', collectionName, 'ready' + definitionString, { ready: false });
+      this.added( collectionName, 'ready' + definitionString, { ready: false });
 
       const updateCount = _.throttle(() => this.changed(
           collectionName,
@@ -198,11 +205,17 @@ class SearchCollection {
       Tracker.autorun((c) => {
         computation = c;
         count = cursor.mongoCursor.count();
+        
         updateCount();
       });
+      let self = this;
 
       let resultsHandle = cursor.mongoCursor.observe({
         addedAt: (doc, atIndex, before) => {
+          if (doc === 'ready') {
+            this.changed(collectionName, 'ready' + definitionString, { ready: true });
+            return
+          }
           doc = collectionScope.engine.config.beforePublish('addedAt', doc, atIndex, before);
           doc = collectionScope.addCustomFields(doc, {
             searchDefinition: definitionString,
@@ -257,10 +270,13 @@ class SearchCollection {
       });
       
       this.ready();
-
-      if (collectionScope._indexConfiguration.unblocked){
-        this.unblock();
+      if(!collectionScope._indexConfiguration.providesReady) {
+        this.changed(collectionName, 'ready' + definitionString, { ready: true });
       }
+
+      // if (collectionScope._indexConfiguration.unblocked){
+      //   this.unblock();
+      // }
     });
   }
 }
