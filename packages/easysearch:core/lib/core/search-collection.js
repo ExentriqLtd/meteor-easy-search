@@ -30,7 +30,13 @@ class SearchCollection {
     this._engine = engine;
 
     if (Meteor.isClient) {
-      this._collection = new Mongo.Collection(this._name);
+      if (indexConfiguration.connection) {
+        this.connection = indexConfiguration.connection;
+        let options = { connection: this.connection };
+        this._collection = new Mongo.Collection(this._name, options);
+      } else {
+        this._collection = new Mongo.Collection(this._name);
+      }
     } else if (Meteor.isServer) {
       this._setUpPublication();
     }
@@ -68,7 +74,7 @@ class SearchCollection {
     }
     const d = new Date().getTime();
     const ready = new ReactiveVar(false);
-    let publishHandle = Meteor.subscribe(this.name, searchDefinition, options, {
+    let publishHandle = (this.connection || Meteor).subscribe(this.name, searchDefinition, options, {
       onStop() {
         console.log('stop', new Date().getTime());
       }
