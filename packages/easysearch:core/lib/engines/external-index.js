@@ -50,12 +50,18 @@ class Cache {
   }
 }
 
-const prepareData = ({ data, total }, col, raw) => {
+const prepareData = ({ data, total }, col, raw, map) => {
   if (raw) {
     return { 
       data: _.map(data, (e) => e.map || e),
-      total 
+      total,
     };
+  }
+  if (map) {
+    return {
+      data: map(data),
+      total,
+    }
   }
   const objIds = [];
   if (data.length > 0) {
@@ -79,10 +85,11 @@ const remove = (array, item) => {
 };
 
 class ElasticCursor {
-  constructor(id, selector, searchString, searchOptions, col, raw) {
+  constructor(id, selector, searchString, searchOptions, col, raw, map) {
     this.id = id;
     this.col = col;
     this.raw = raw;
+    this.map = map;
     this.countDep = new Tracker.Dependency();
     this.ready = new ReactiveVar(false);
     this.dataDep = new Tracker.Dependency();
@@ -161,7 +168,7 @@ class ElasticCursor {
   }
 
   publishData(d) {
-    const { total, data } = prepareData(d, this.col, this.raw);
+    const { total, data } = prepareData(d, this.col, this.raw, this.map);
     const currentIds = _.pluck(data, "_id");
     const earlierIds = _.pluck(this.data.entries, "_id");
     const removed = _.difference(earlierIds, currentIds);
@@ -361,7 +368,8 @@ class ExternalEngine extends ReactiveEngine {
       searchString,
       searchOptions,
       options.index.collection,
-      options.index.raw
+      options.index.raw,
+      options.index.map
     );
   }
 }
