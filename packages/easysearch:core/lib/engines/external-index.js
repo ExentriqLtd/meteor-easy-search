@@ -1,8 +1,6 @@
 import Cursor from "../core/cursor";
 import ReactiveEngine from "../core/reactive-engine";
 import ExGuardianApi from "meteor/exentriq:guardian-connector";
-import { arch } from "os";
-import { setTimeout } from "timers";
 import { ReactiveVar } from "meteor/reactive-var";
 let Future;
 if (Meteor.isServer) {
