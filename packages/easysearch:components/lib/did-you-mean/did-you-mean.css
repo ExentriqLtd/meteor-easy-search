@@ -1,0 +1,32 @@
+.did-you-mean .did-you-mean-list .did-you-mean-item {
+    display: inline;
+    margin: 5px 10px 5px 0;
+    font-size: 14px;
+}
+
+/* .did-you-mean .did-you-mean-list .did-you-mean-item:first-child {
+    margin: 5px 5px 5px 0;
+} */
+
+.did-you-mean .did-you-mean-list .did-you-mean-item a {
+    text-decoration: underline;
+    padding: 0;
+    color: rgb(27, 188, 155);
+    display: inline;
+}
+
+.did-you-mean .did-you-mean-list .did-you-mean-item:hover, .did-you-mean .did-you-mean-list .did-you-mean-item a:hover {
+    background: transparent !important;
+    color: rgb(27, 188, 155) !important;
+}
+
+.did-you-mean {
+    padding: 10px;
+}
+
+.did-you-mean .did-you-mean-title {
+    font-size: 14px;
+    margin-bottom: 4px;
+    font-weight: 400;
+    font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+}

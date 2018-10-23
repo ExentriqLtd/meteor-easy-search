@@ -61,7 +61,6 @@ class Cursor {
    */
   isReady() {
     if (this._isReady && this._isReady.get) {
-      console.log(this._isReady.get())
       return this._isReady.get();
     }
     return this._isReady;

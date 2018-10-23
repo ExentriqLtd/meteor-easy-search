@@ -10,6 +10,7 @@ const {
   InputComponent,
   LoadMoreComponent,
   PaginationComponent,
+  DidYouMeanComponent,
 } = EasySearch;
 
 export {
@@ -24,4 +25,5 @@ export {
   InputComponent,
   LoadMoreComponent,
   PaginationComponent,
+  DidYouMeanComponent,
 };

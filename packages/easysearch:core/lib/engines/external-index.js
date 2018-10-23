@@ -83,11 +83,12 @@ const remove = (array, item) => {
 };
 
 class ElasticCursor {
-  constructor(id, selector, searchString, searchOptions, col, raw, map) {
+  constructor(id, selector, searchString, searchOptions, col, raw, map, userId) {
     this.id = id;
     this.col = col;
     this.raw = raw;
     this.map = map;
+    this.userId = userId;
     this.countDep = new Tracker.Dependency();
     this.ready = new ReactiveVar(false);
     this.dataDep = new Tracker.Dependency();
@@ -144,9 +145,10 @@ class ElasticCursor {
       this.data.prom.cancel();
     }
     this.ready.set(false)
+    const user = Meteor.users.findOne(this.userId, { fields: { username: 1 } });
     const prom = ExGuardianApi.call(
       "elasticSearch.mongoCustomSearchPaginated",
-      args,
+      [user.username, ...args],
       true
     );
     this.data.prom = prom;
@@ -350,6 +352,7 @@ class ExternalEngine extends ReactiveEngine {
       searchDefinition,
       options
     );
+    const userId = options.search.userId;
     const allParams = {
       ...selObj,
       ...searchOptions,
@@ -367,7 +370,8 @@ class ExternalEngine extends ReactiveEngine {
       searchOptions,
       options.index.collection,
       options.index.raw,
-      options.index.map
+      options.index.map,
+      userId,
     );
   }
 }

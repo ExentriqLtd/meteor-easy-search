@@ -76,7 +76,6 @@ class SearchCollection {
     const ready = new ReactiveVar(false);
     let publishHandle = (this.connection || Meteor).subscribe(this.name, searchDefinition, options, {
       onStop() {
-        console.log('stop', new Date().getTime());
       }
     });
 
@@ -90,7 +89,6 @@ class SearchCollection {
       let isReady = this._collection.findOne('ready' + JSON.stringify(searchDefinition));
       ready.set(isReady && isReady.ready);
     })
-    console.log(new Date().getTime() - d)
     return new Cursor(mongoCursor, count, ready, publishHandle);
   }
 
@@ -197,7 +195,6 @@ class SearchCollection {
       let count = cursor.count() || 0;
 
       this.added(collectionName, 'searchCount' + definitionString, { count: count });
-      console.log('sending add', collectionName, 'ready' + definitionString, { ready: false });
       this.added( collectionName, 'ready' + definitionString, { ready: false });
 
       const updateCount = _.throttle(() => this.changed(

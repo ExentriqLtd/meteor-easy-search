@@ -12,7 +12,6 @@ EasySearch._getComponentMethods = function (dict, index) {
 
       dict.set('searchDefinition', searchDefinition);
       dict.set('stopPublication', true);
-      console.log('search', searchDefinition)
     },
     /**
      * Return the EasySearch.Cursor for the current search.

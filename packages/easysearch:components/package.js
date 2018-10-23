@@ -22,6 +22,7 @@ Package.onUse(function(api) {
   api.addFiles(['lib/each/each.html', 'lib/each/each.js'], 'client');
 
   // If Components
+  api.addFiles(['lib/did-you-mean/did-you-mean.html', 'lib/did-you-mean/did-you-mean.js'], 'client');
   api.addFiles(['lib/if-input-empty/if-input-empty.html', 'lib/if-input-empty/if-input-empty.js'], 'client');
   api.addFiles(['lib/if-no-results/if-no-results.html', 'lib/if-no-results/if-no-results.js'], 'client');
   api.addFiles(['lib/if-searching/if-searching.html', 'lib/if-searching/if-searching.js'], 'client');
