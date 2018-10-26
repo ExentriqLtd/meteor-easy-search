@@ -22,7 +22,8 @@ EasySearch.DidYouMeanComponent = class DidYouMeanComponent extends BaseComponent
       return;
     }
     Meteor.call('Search.didYouMean', { query: string }, (err, res) => {
-      if (res) {
+      if (res) { 
+        console.log(res);
         this.results.set(res);
       } else {
         console.log(err);
@@ -66,7 +67,7 @@ EasySearch.DidYouMeanComponent = class DidYouMeanComponent extends BaseComponent
 
   events() {
     return [{
-        'click .js-change-search': function(event) {
+      'click .js-change-search': function(event) {
         event.preventDefault();
         const search = Blaze.getData(event.target);
         this.changeSearch(search);
