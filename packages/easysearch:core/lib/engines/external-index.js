@@ -1,8 +1,6 @@
 import Cursor from "../core/cursor";
 import ReactiveEngine from "../core/reactive-engine";
 import ExGuardianApi from "meteor/exentriq:guardian-connector";
-import { arch } from "os";
-import { setTimeout } from "timers";
 import { ReactiveVar } from "meteor/reactive-var";
 let Future;
 if (Meteor.isServer) {
@@ -50,12 +48,18 @@ class Cache {
   }
 }
 
-const prepareData = ({ data, total }, col, raw) => {
+const prepareData = ({ data, total }, col, raw, map) => {
   if (raw) {
     return { 
       data: _.map(data, (e) => e.map || e),
-      total 
+      total,
     };
+  }
+  if (map) {
+    return {
+      data: map(data),
+      total,
+    }
   }
   const objIds = [];
   if (data.length > 0) {
@@ -79,11 +83,12 @@ const remove = (array, item) => {
 };
 
 class ElasticCursor {
-  constructor(id, selector, searchString, searchOptions, col, raw) {
-    console.log('cursor', id);
+  constructor(id, selector, searchString, searchOptions, col, raw, map, userId) {
     this.id = id;
     this.col = col;
     this.raw = raw;
+    this.map = map;
+    this.userId = userId;
     this.countDep = new Tracker.Dependency();
     this.ready = new ReactiveVar(false);
     this.dataDep = new Tracker.Dependency();
@@ -107,7 +112,6 @@ class ElasticCursor {
         return this.data.total;
       },
       observe: ({ addedAt, removed, movedTo, changedAt }) => {
-        console.log('cached observer', this.data.entries.length)
         const data = this.data.entries;
         this.cbs.addedAt.push(addedAt);
         this.cbs.removed.push(removed);
@@ -125,7 +129,7 @@ class ElasticCursor {
           }
         };
       },
-      ready: () => true
+      ready: () => console.log('ready', this.ready.get()) || this.ready.get()
     }
   }
 
@@ -140,9 +144,11 @@ class ElasticCursor {
     if (this.data.prom){
       this.data.prom.cancel();
     }
+    this.ready.set(false)
+    const user = Meteor.users.findOne(this.userId, { fields: { username: 1 } });
     const prom = ExGuardianApi.call(
       "elasticSearch.mongoCustomSearchPaginated",
-      args,
+      [user.username, ...args],
       true
     );
     this.data.prom = prom;
@@ -158,15 +164,11 @@ class ElasticCursor {
     }));
 
     prom.finally(Meteor.bindEnvironment(() => {
-      if (prom.isCancelled()) {
-        console.log('cancel');
-      }
     }));
   }
 
   publishData(d) {
-    const { total, data } = prepareData(d, this.col, this.raw);
-    console.log(total, data.length);
+    const { total, data } = prepareData(d, this.col, this.raw, this.map);
     const currentIds = _.pluck(data, "_id");
     const earlierIds = _.pluck(this.data.entries, "_id");
     const removed = _.difference(earlierIds, currentIds);
@@ -230,6 +232,7 @@ class ElasticCursor {
         this.run('addedAt', dataByIdNew[id].d, action.at, action.at === data.length - 1 ? null : data[action.at + 1]._id );
       }
     }
+    this.run('addedAt', 'ready');
     this.ready.set(true);
   }
 
@@ -237,7 +240,6 @@ class ElasticCursor {
     if (!this.cbs[type]) {
       return //stopped
     }
-    console.log(type);
     for (let i = 0; i < this.cbs[type].length; i += 1) {
       this.cbs[type][i](...params);
     }
@@ -269,6 +271,7 @@ class ElasticCursor {
 class ExternalEngine extends ReactiveEngine {
   onIndexCreate(indexConfig) {
     indexConfig.unblocked = true;
+    indexConfig.providesReady = true;
     super.onIndexCreate(indexConfig);
     if (Meteor.isServer) {
       this.col = new Mongo.Collection(null);
@@ -349,6 +352,7 @@ class ExternalEngine extends ReactiveEngine {
       searchDefinition,
       options
     );
+    const userId = options.search.userId;
     const allParams = {
       ...selObj,
       ...searchOptions,
@@ -366,6 +370,8 @@ class ExternalEngine extends ReactiveEngine {
       searchOptions,
       options.index.collection,
       options.index.raw,
+      options.index.map,
+      userId,
     );
   }
 }

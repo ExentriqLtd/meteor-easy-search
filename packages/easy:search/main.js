@@ -12,6 +12,7 @@ import {
   SingleIndexComponent,
   BaseComponent,
   FieldInputComponent,
+  DidYouMeanComponent,
   EachComponent,
   IfInputEmptyComponent,
   IfNoResultsComponent,
@@ -43,4 +44,5 @@ export {
   LoadMoreComponent,
   InfiniteScrollComponent,
   PaginationComponent,
+  DidYouMeanComponent,
 }

@@ -10,10 +10,11 @@ Package.onUse(function(api) {
   api.versionsFrom('1.4.2');
 
   // Dependencies
-  api.use(['check', 'ecmascript', 'mongo', 'underscore']);
+  api.use(['check', 'ecmascript', 'mongo', 'underscore', 'tracker', 'reactive-var']);
   api.use('meteorhacks:unblock', 'server');
   api.use(['erasaur:meteor-lodash@4.0.0'], { weak: true });
-  api.use(['exentriq:guardian-connector'], { weak: true });
+  api.use(['exentriq:guardian-connector']);
+  api.use(['exentriq:cache']);
 
   // Core packages
   api.addFiles([
