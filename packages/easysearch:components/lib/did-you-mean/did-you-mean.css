@@ -18,6 +18,7 @@
 .did-you-mean .did-you-mean-list .did-you-mean-item a {
     padding: 0;
     color: white;
+    line-height: 23px !important;
 }
 
 .did-you-mean .did-you-mean-list .did-you-mean-item:hover, .did-you-mean .did-you-mean-list .did-you-mean-item a:hover {
