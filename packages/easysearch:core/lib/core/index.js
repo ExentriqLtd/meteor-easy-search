@@ -17,7 +17,7 @@ class Index {
    */
   constructor(config) {
     check(config, Object);
-    check(config.collection, Mongo.Collection);
+    check(config.collection, Match.Maybe(Mongo.Collection));
     check(config.fields, [String]);
 
     if (!(config.engine instanceof Engine)) {

@@ -19,7 +19,6 @@ class Cursor {
   constructor(mongoCursor, count, isReady = true, publishHandle = null) {
     check(mongoCursor.fetch, Function);
     check(count, Number);
-    check(isReady, Match.Optional(Boolean));
     check(publishHandle, Match.OneOf(null, Object));
 
     this._mongoCursor = mongoCursor;
@@ -61,6 +60,9 @@ class Cursor {
    * @returns {Boolean}
    */
   isReady() {
+    if (this._isReady && this._isReady.get) {
+      return this._isReady.get();
+    }
     return this._isReady;
   }
 

@@ -41,7 +41,7 @@ EasySearch.InfiniteScrollComponent = class InfiniteScrollComponent extends Singl
   };
 
   onScroll(evt) {
-    var target = (evt && evt.currentTarget) || this.options.scrollContainer ;
+    var target = this.options.scrollContainer ||  (evt && evt.currentTarget);
     let pos = $(target).find('.loading-easy-search').position();
     if (this.moreDocuments() && pos.top - this.options.offset <= $(target).height()){
       this.loadMore();
@@ -82,7 +82,6 @@ EasySearch.InfiniteScrollComponent = class InfiniteScrollComponent extends Singl
    * @returns {Boolean}
    */
   moreDocuments() {
-    console.log('has more', this.index.getComponentMethods(this.name).hasMoreDocuments());
     return this.index.getComponentMethods(this.name).hasMoreDocuments();
   }
 
@@ -108,7 +107,7 @@ EasySearch.InfiniteScrollComponent = class InfiniteScrollComponent extends Singl
    */
   get defaultOptions() {
     return {
-      content: 'Load more',
+      content: '',
       scrollContainer: null,
       offset: 100,
       count: 5

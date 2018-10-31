@@ -12,7 +12,6 @@ EasySearch._getComponentMethods = function (dict, index) {
 
       dict.set('searchDefinition', searchDefinition);
       dict.set('stopPublication', true);
-      console.log('search', searchDefinition)
     },
     /**
      * Return the EasySearch.Cursor for the current search.
@@ -99,7 +98,7 @@ EasySearch._getComponentMethods = function (dict, index) {
       let currentCount = dict.get('currentCount'),
         options = dict.get('searchOptions') || {};
 
-      options.limit = currentCount + count;
+      options.limit = (options.limit || 0) + count;
       dict.set('stopPublication', false);
       dict.set('searchOptions', options);
     },

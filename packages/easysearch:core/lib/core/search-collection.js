@@ -30,7 +30,13 @@ class SearchCollection {
     this._engine = engine;
 
     if (Meteor.isClient) {
-      this._collection = new Mongo.Collection(this._name);
+      if (indexConfiguration.connection) {
+        this.connection = indexConfiguration.connection;
+        let options = { connection: this.connection };
+        this._collection = new Mongo.Collection(this._name, options);
+      } else {
+        this._collection = new Mongo.Collection(this._name);
+      }
     } else if (Meteor.isServer) {
       this._setUpPublication();
     }
@@ -66,8 +72,12 @@ class SearchCollection {
     if (!Meteor.isClient) {
       throw new Error('find can only be used on client');
     }
-
-    let publishHandle = Meteor.subscribe(this.name, searchDefinition, options);
+    const d = new Date().getTime();
+    const ready = new ReactiveVar(false);
+    let publishHandle = (this.connection || Meteor).subscribe(this.name, searchDefinition, options, {
+      onStop() {
+      }
+    });
 
     let count = this._getCount(searchDefinition);
     let mongoCursor = this._getMongoCursor(searchDefinition, options);
@@ -75,8 +85,11 @@ class SearchCollection {
     if (!_.isNumber(count)) {
       return new Cursor(mongoCursor, 0, false);
     }
-
-    return new Cursor(mongoCursor, count, true, publishHandle);
+    Tracker.autorun(() => {
+      let isReady = this._collection.findOne('ready' + JSON.stringify(searchDefinition));
+      ready.set(isReady && isReady.ready);
+    })
+    return new Cursor(mongoCursor, count, ready, publishHandle);
   }
 
   /**
@@ -161,7 +174,6 @@ class SearchCollection {
     Meteor.publish(collectionName, function (searchDefinition, options) {
       check(searchDefinition, Match.OneOf(String, Object));
       check(options, Object);
-      console.log(searchDefinition, options);
       let definitionString = JSON.stringify(searchDefinition),
         optionsString = JSON.stringify(options.props);
 
@@ -176,26 +188,37 @@ class SearchCollection {
 
       let cursor = collectionScope.engine.search(searchDefinition, {
         search: options,
+        connectionId: this.connection.id,
         index: collectionScope._indexConfiguration
       });
 
-      const count = cursor.count();
+      let count = cursor.count() || 0;
 
       this.added(collectionName, 'searchCount' + definitionString, { count: count });
+      this.added( collectionName, 'ready' + definitionString, { ready: false });
 
-      const intervalID = Meteor.defer(() => this.changed(
-        collectionName,
-        'searchCount' + definitionString,
-        { count: cursor.mongoCursor.count() }
-      ));
+      const updateCount = _.throttle(() => this.changed(
+          collectionName,
+          'searchCount' + definitionString,
+          { count: count }
+        )
+      , 250);
 
-      this.onStop(function () {
-        Meteor.clearInterval(intervalID);
-        resultsHandle && resultsHandle.stop();
+      let computation;
+      Tracker.autorun((c) => {
+        computation = c;
+        count = cursor.mongoCursor.count();
+        
+        updateCount();
       });
+      let self = this;
 
       let resultsHandle = cursor.mongoCursor.observe({
         addedAt: (doc, atIndex, before) => {
+          if (doc === 'ready') {
+            this.changed(collectionName, 'ready' + definitionString, { ready: true });
+            return
+          }
           doc = collectionScope.engine.config.beforePublish('addedAt', doc, atIndex, before);
           doc = collectionScope.addCustomFields(doc, {
             searchDefinition: definitionString,
@@ -203,7 +226,6 @@ class SearchCollection {
             sortPosition: atIndex,
             originalId: doc._id
           });
-
           this.added(collectionName, collectionScope.generateId(doc), doc);
         },
         changedAt: (doc, oldDoc, atIndex) => {
@@ -244,12 +266,20 @@ class SearchCollection {
           this.removed(collectionName, collectionScope.generateId(doc));
         }
       });
-
+      
       this.onStop(function () {
-        resultsHandle.stop();
+        computation && computation.stop()
+        resultsHandle && resultsHandle.stop();
       });
-
+      
       this.ready();
+      if(!collectionScope._indexConfiguration.providesReady) {
+        this.changed(collectionName, 'ready' + definitionString, { ready: true });
+      }
+
+      // if (collectionScope._indexConfiguration.unblocked){
+      //   this.unblock();
+      // }
     });
   }
 }
