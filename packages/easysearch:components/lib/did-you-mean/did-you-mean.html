@@ -2,7 +2,7 @@
     {{#if noResults}}
         {{#if suggestions.length}}
             <div class="did-you-mean">
-                <div class="did-you-mean-title">Did you mean:</div>
+                <div class="did-you-mean-title">{{sTr "search-did-you-mean"}}:</div>
                 <ul class="did-you-mean-list">
                     {{#each suggestions}}
                         <li class="did-you-mean-item"><a class='js-change-search'>{{this}}</a></li>

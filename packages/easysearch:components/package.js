@@ -10,7 +10,10 @@ Package.onUse(function(api) {
   api.versionsFrom('1.4.2');
 
   // Dependencies
-  api.use(['check', 'reactive-dict', 'ecmascript', 'random', 'underscore', 'tracker']);
+  api.use('tap:i18n@2.0.0', ['client', 'server']);
+  api.imply('tap:i18n');
+  api.addFiles('package-tap.i18n', ['client', 'server']);
+  api.use(['check', 'reactive-dict', 'reactive-var', 'ecmascript', 'random', 'underscore', 'tracker']);
   api.use(['peerlibrary:blaze-components@0.16.0', 'easysearch:core@2.1.2']);
   api.use(['erasaur:meteor-lodash@4.0.0'], { weak: true });
 
@@ -37,6 +40,7 @@ Package.onUse(function(api) {
   ], 'client');
 
   api.export('EasySearch');
+  api.addFiles('i18n/en.i18n.json', ['client', 'server'])
 
   api.mainModule('lib/main.js');
 });
