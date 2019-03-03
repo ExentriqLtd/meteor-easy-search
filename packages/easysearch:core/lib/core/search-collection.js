@@ -219,7 +219,8 @@ class SearchCollection {
             this.changed(collectionName, 'ready' + definitionString, { ready: true });
             return
           }
-          doc = collectionScope.engine.config.beforePublish('addedAt', doc, atIndex, before);
+          const b = before && before._id || before;
+          doc = collectionScope.engine.config.beforePublish('addedAt', doc, atIndex, b);
           doc = collectionScope.addCustomFields(doc, {
             searchDefinition: definitionString,
             searchOptions: optionsString,
@@ -240,14 +241,16 @@ class SearchCollection {
           this.changed(collectionName, collectionScope.generateId(doc), doc)
         },
         movedTo: (doc, fromIndex, toIndex, before) => {
-          doc = collectionScope.engine.config.beforePublish('movedTo', doc, fromIndex, toIndex, before);
+          doc = collectionScope.engine.config.beforePublish('movedTo', doc, fromIndex, toIndex, (before && before._id) || before);
           doc = collectionScope.addCustomFields(doc, {
             searchDefinition: definitionString,
             searchOptions: optionsString,
             sortPosition: toIndex
           });
 
-          let beforeDoc = collectionScope._indexConfiguration.collection.findOne(before);
+          let beforeDoc = (before && before._id) ? before : (
+            collectionScope._indexConfiguration.collection && 
+            collectionScope._indexConfiguration.collection.findOne(before));
 
           if (beforeDoc) {
             beforeDoc = collectionScope.addCustomFields(beforeDoc, {

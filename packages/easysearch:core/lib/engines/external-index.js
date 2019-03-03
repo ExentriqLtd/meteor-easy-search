@@ -227,9 +227,9 @@ class ElasticCursor {
       } else if (action.t === 'changed') {
         this.run('changed', dataByIdNew[id].d, dataByIdOld[id].d, action.at);
       } else if (action.t === 'moved') {
-        this.run('movedTo', dataByIdNew[id].d, action.from, action.to, action.to === data.length - 1 ? null : data[action.to + 1]._id );
+        this.run('movedTo', dataByIdNew[id].d, action.from, action.to, action.to === data.length - 1 ? null : data[action.to + 1] );
       } else if (action.t === 'added') {
-        this.run('addedAt', dataByIdNew[id].d, action.at, action.at === data.length - 1 ? null : data[action.at + 1]._id );
+        this.run('addedAt', dataByIdNew[id].d, action.at, action.at === data.length - 1 ? null : data[action.at + 1] );
       }
     }
     this.run('addedAt', 'ready');
