@@ -14,7 +14,7 @@ EasySearch.InputComponent = class InputComponent extends BaseComponent {
 
     // create a reactive dependency to the cursor
     this.debouncedSearch = _.debounce((searchString) => {
-      searchString = searchString.trim();
+      // searchString = searchString.trim();
 
       if (this.searchString !== searchString) {
         this.searchString = searchString;
