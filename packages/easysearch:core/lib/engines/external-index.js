@@ -7,7 +7,7 @@ if (Meteor.isServer) {
   Future = require("fibers/future");
 }
 
-class Cache {
+export class Cache {
   constructor() {
     this.data = {};
     this.lock = {};
@@ -82,7 +82,7 @@ const remove = (array, item) => {
   }
 };
 
-class ElasticCursor {
+export class ElasticCursor {
   constructor(id, selector, searchString, searchOptions, col, raw, map, userId) {
     this.id = id;
     this.col = col;
