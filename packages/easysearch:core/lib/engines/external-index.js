@@ -2,6 +2,8 @@ import Cursor from "../core/cursor";
 import ReactiveEngine from "../core/reactive-engine";
 import ExGuardianApi from "meteor/exentriq:guardian-connector";
 import { ReactiveVar } from "meteor/reactive-var";
+import get from 'lodash/get';
+
 let Future;
 if (Meteor.isServer) {
   Future = require("fibers/future");
@@ -50,7 +52,7 @@ export class Cache {
 
 const prepareData = ({ data, total }, col, raw, map) => {
   if (raw) {
-    return { 
+    return {
       data: _.map(data, (e) => e.map || e),
       total,
     };
@@ -138,6 +140,7 @@ export class ElasticCursor {
       searchString,
       findOptions.fields,
       JSON.stringify(selector),
+      findOptions.spaceId,
       findOptions.skip || 0,
       findOptions.limit || 10
     ];
@@ -155,7 +158,8 @@ export class ElasticCursor {
 
     prom.then(Meteor.bindEnvironment(result => {
       const { total, list: { list } } = result && result.result;
-      this.publishData({ total, data: list });
+      const map = get(result, 'result.list');
+      this.publishData({ total, data: list || map });
     }));
 
     prom.catch(Meteor.bindEnvironment(error => {
@@ -217,8 +221,8 @@ export class ElasticCursor {
     const ids = Object.keys(actions);
     this.data.entries.splice(0, this.data.entries.length, ...data);
     this.data.total = total;
-    this.countDep.changed(); 
-    this.dataDep.changed(); 
+    this.countDep.changed();
+    this.dataDep.changed();
     for (let i = 0; i < ids.length; i += 1) {
       const id = ids[i];
       const action = actions[id];
@@ -340,6 +344,7 @@ class ExternalEngine extends ReactiveEngine {
    * @param {Object} options          Search and index options
    */
   getSearchCursor(searchDefinition, options) {
+    console.log('0..getSearchCursor::::',searchDefinition, options)
     const selObj = this.callConfigMethod("selector", searchDefinition, options),
       findOptions = this.getFindOptions(searchDefinition, options);
     const selector = selObj.selector;
