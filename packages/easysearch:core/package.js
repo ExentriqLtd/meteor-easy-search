@@ -11,7 +11,7 @@ Package.onUse(function(api) {
 
   // Dependencies
   api.use(['check', 'ecmascript', 'mongo', 'underscore', 'tracker', 'reactive-var']);
-  api.use('meteorhacks:unblock', 'server');
+  api.use('lamhieu:unblock', 'server');
   api.use(['erasaur:meteor-lodash@4.0.0'], { weak: true });
   api.use(['exentriq:guardian-connector']);
   api.use(['exentriq:cache']);
