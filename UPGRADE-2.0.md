@@ -38,7 +38,6 @@ index.search('Marie', {
  * `easy:search`: Wrapper package for components and core
  * `easysearch:elasticsearch`: ElasticSearch engine
  * `easysearch:autosuggest`: Autosuggest component
-* `matteodem:easy-search` is now deprecated, switch to `easy:search` or one of the sub packages
 
 ## Index
 
