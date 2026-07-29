@@ -6,7 +6,7 @@ Package.describe({
   documentation: "../../README.md"
 });
 
-Package.on_use(function (api) {
+Package.onUse(function (api) {
   if (api.versionsFrom) {
     api.versionsFrom('1.2.0.1');
   }
